@@ -1,0 +1,63 @@
+import re 
+
+# 1. دالة استخراج الدومينات
+def get_domains(text):
+    """استخراج نطاقات البريد الإلكتروني من الأسطر التي تبدأ بـ from"""
+    domains = []
+    # تحويل النص كاملاً لحروف صغيرة لتجنب مشاكل حالة الأحرف
+    lines = text.lower().strip().splitlines()
+    
+    for line in lines:
+        # ^from : يبدأ السطر بكلمة from
+        # .+@ : أي محتوى وصولاً لعلامة @
+        # ([\w\.]+) : اقتناص الدومين (أحرف، أرقام، نقاط) في مجموعة
+        domain_match = re.search(r'^from.+@([\w\.]+)', line)
+        if domain_match: 
+            domain = domain_match.group(1)
+            domains.append(domain.strip('.')) 
+    return domains
+
+# 2. دالة حساب تكرارات الدومينات
+def count_occurrences(items_list): 
+    """تحويل قائمة العناصر إلى قاموس يحتوي على تكرار كل عنصر"""
+    counts = {}
+    for item in items_list: 
+        counts[item] = counts.get(item, 0) + 1
+    return counts
+
+# 3. دالة ترتيب وطباعة النتائج
+def report_top_domains(counts_dict, limit=6):
+    """ترتيب الدومينات حسب الأكثر تكراراً وطباعتها"""
+    # ترتيب القاموس: التكرار أولاً ثم الدومين
+    top_list = sorted([(v, k) for (k, v) in counts_dict.items()], reverse=True)
+    
+    print(f"\n--- Top {limit} most frequent domains ---")
+    for count, domain in top_list[:limit]:
+        print(f"{domain:20} | Count: {count}")
+
+# الدالة الرئيسية
+def main():
+    file_name = input("Enter a file name: ")
+    try:
+        with open(file_name, 'r', encoding='utf-8') as file:
+            file_text = file.read()
+            
+        # تسلسل العمليات (Pipeline)
+        domains = get_domains(file_text)
+        
+        if not domains:
+            print("No valid 'From' domains found in the file.")
+            return
+
+        domain_counts = count_occurrences(domains)
+        report_top_domains(domain_counts)
+        
+    except FileNotFoundError:
+        print("Error: This file does not exist.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+# نقطة انطلاق البرنامج
+if __name__ == "__main__":
+    main()
+
